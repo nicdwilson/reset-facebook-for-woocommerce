@@ -1,6 +1,6 @@
 <?php
 
-namespace RFB4WC;
+namespace TFB4WC;
 
 // If this file is called directly, abort.
 if ( ! defined( 'WPINC' ) ) {
@@ -63,10 +63,10 @@ class Menu {
 
 		add_submenu_page(
 			'tools.php',
-			'Reset Facebook for WooCommerce',
-			'Reset Facebook for WooCommerce',
+			'Troubleshoot Facebook for WooCommerce',
+			'Troubleshoot Facebook for WooCommerce',
 			'manage_options',
-			'reset-facebook-for-woocommerce',
+			'troubleshoot-facebook-for-woocommerce',
 			array(
 				$this,
 				'render_page',
@@ -81,7 +81,10 @@ class Menu {
 	public function render_page() {
 
 		ob_start();
-		include 'views/render-page.php';
+        /**
+         * Reset options
+         */
+		include 'views/render-reset.php';
 		$html = ob_get_clean();
 		echo $html;
 
@@ -90,14 +93,18 @@ class Menu {
 	/**
 	 * Grab array of options starting with 'wc_facebook_'
 	 *
-	 * @return array|object|null
+	 * @return array
 	 */
 	private function scan_options_table() {
 		global $wpdb;
 
 		$table_name = $wpdb->prefix . 'options';
 		$sql        = "SELECT option_name FROM $table_name WHERE option_name LIKE 'wc_facebook_%'";
-		$options    = $wpdb->get_results( $sql, ARRAY_A );
+		$options    = $wpdb->get_col( $sql, 0);
+
+		if( !is_array( $options)){
+		    $options = array();
+        }
 
 		return $options;
 
