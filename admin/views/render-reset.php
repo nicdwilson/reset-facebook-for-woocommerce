@@ -11,10 +11,6 @@ if (!defined('WPINC')) {
 $options_inDB = $this->scan_options_table();
 $options = array_intersect($this->options_whitelist, $options_inDB);
 
-var_dump('<pre>');
-var_dump($_POST);
-var_dump('</pre>');
-
 /**
  * If this is the postback for reset
  */

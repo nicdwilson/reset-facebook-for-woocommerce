@@ -20,11 +20,6 @@ if ( is_admin() ) {
 }
 
 /**
- * Test data load
- */
-include plugin_dir_path( __FILE__ ) . '/admin/data.php';
-
-/**
  * Class Troubleshoot_FB4WC
  * @package TFB4WC
  */
