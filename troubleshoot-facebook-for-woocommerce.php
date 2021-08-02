@@ -50,7 +50,7 @@ class Troubleshoot_FB4WC {
 		add_action( 'admin_notices', array( $this, 'check_plugins' ) );
 
 
-		if ( get_option( 'tfb4wc_set_proxy' ) === 1 ) {
+		if ( get_option( 'tsfb4wc_connection_test' ) === '1' ) {
 
 			add_filter( 'wc_facebook_connection_proxy_url', function () {
 				return 'https://wc-connect-test.skyverge.com/auth/facebook/';
@@ -77,9 +77,9 @@ class Troubleshoot_FB4WC {
 
 		<?php endif;
 
-		if ( get_option( 'tfb4wc_set_proxy' ) === '1' ): ?>
+		if ( get_option( 'tsfb4wc_connection_test' ) === '1' ): ?>
 
-            <div class="notice notice-error error-alt inline">
+            <div class="notice notice-error error-alt">
                 <p>Facebook for WooCommerce is connecting through a test proxy. Remember to deactivate this when you
                     have finished troubleshooting.</p>
             </div>
@@ -93,7 +93,7 @@ class Troubleshoot_FB4WC {
 	 */
 	public static function deactivated() {
 
-		delete_option( 'tfb4wc_set_proxy' );
+		delete_option( 'tsfb4wc_connection_test' );
 	}
 
 
