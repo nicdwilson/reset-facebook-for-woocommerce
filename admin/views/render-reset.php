@@ -20,6 +20,8 @@ if ( isset( $_POST['reset'] ) && $_POST['reset'] === 'true' && check_admin_refer
 		foreach ( $options as $option ) {
 			delete_option( $option );
 		}
+		//Pesky leftover pixel_id
+		delete_option('facebook_config');
     }
 
 	/**
