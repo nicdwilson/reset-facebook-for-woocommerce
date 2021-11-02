@@ -98,7 +98,7 @@ if ( isset( $_POST['reset'] ) && $_POST['reset'] === 'true' && check_admin_refer
 	
 	    <?php
 		$facebook_config = get_option(facebook_config);
-		if( is_array( $facebook_config );
+		if( is_array( $facebook_config ):
  	     ?>
 	    <pre>
 		Previously stored Facebook Config data
