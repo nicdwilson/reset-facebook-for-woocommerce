@@ -95,6 +95,16 @@ if ( isset( $_POST['reset'] ) && $_POST['reset'] === 'true' && check_admin_refer
 		if ( is_plugin_active( 'facebook-for-woocommerce/facebook-for-woocommerce.php' ) ): ?>
 
             <h3>Please deactivate WooCommerce for Facebook if you want to delete options.</h3>
+	
+	    <?php
+		$facebook_config = get_option(facebook_config);
+		if( is_array( $facebook_config );
+ 	     ?>
+	    <pre>
+		Previously stored Facebook Config data
+		<?php print_r( $facebook_config ); ?>
+	    </pre>
+            <?php endif; ?>
 
             <button class="button button-disabled">
                 Delete all options
