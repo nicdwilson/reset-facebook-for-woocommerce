@@ -38,6 +38,7 @@ class Menu {
 		'wc_facebook_excluded_product_tag_ids',
 		'wc_facebook_product_description_mode',
 		'wc_facebook_google_product_category_id',
+		'facebook_config',
 	);
 
 	protected static $instance = null;
