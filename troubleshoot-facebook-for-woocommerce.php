@@ -17,7 +17,10 @@ if ( ! defined( 'WPINC' ) ) {
 
 if ( is_admin() ) {
 	require_once plugin_dir_path( __FILE__ ) . '/admin/class-menu.php';
+	require_once plugin_dir_path( __FILE__ ) . '/admin/class-admin-actions.php';
 }
+
+
 
 /**
  * Class Troubleshoot_FB4WC

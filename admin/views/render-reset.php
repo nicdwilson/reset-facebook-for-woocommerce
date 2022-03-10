@@ -5,32 +5,6 @@ if ( ! defined( 'WPINC' ) ) {
 	die;
 }
 
-/**
- * Pick up options from the DB, check them against the whitelist
- */
-$options_inDB = $this->scan_options_table();
-$options      = array_intersect( $this->options_whitelist, $options_inDB );
-
-/**
- * If this is the postback for reset
- */
-if ( isset( $_POST['reset'] ) && $_POST['reset'] === 'true' && check_admin_referer( 'deletefacebook_' . get_current_user_id() ) ) {
-
-	if( $options ){
-		foreach ( $options as $option ) {
-			delete_option( $option );
-		}
-		//Pesky leftover pixel_id
-		delete_option('facebook_config');
-    }
-
-	/**
-	 * Pick up options from the DB, check them against the whitelist
-	 */
-	$options_inDB = $this->scan_options_table();
-	$options      = array_intersect( $this->options_whitelist, $options_inDB );
-
-}
 
 ?>
 
@@ -63,57 +37,56 @@ if ( isset( $_POST['reset'] ) && $_POST['reset'] === 'true' && check_admin_refer
         <h4>You have <?php echo esc_html( count( $options ) ); ?> Facebook for WooCommerce options stored in your
             database.</h4>
 
-		<?php
-		/**
-		 * Only if Facebook for WooCommerce is not active, and there are options loaded
-		 */
-		if ( ! is_plugin_active( 'facebook-for-woocommerce/facebook-for-woocommerce.php' ) && count( $options ) > 0 && user_can( get_current_user_id(), 'manage_options' ) ): ?>
 
-            <form method="post">
+        <form action="/wp-admin/admin-post.php" method="post">
 
-                <input type="hidden" name="reset" value="true">
-				<?php wp_nonce_field( 'deletefacebook_' . get_current_user_id() ); ?>
+            <input type="hidden" name="reset" value="true">
+			<?php wp_nonce_field( 'deletefacebook_' . get_current_user_id() ); ?>
+            <input type="hidden" name="action" value="delete_facebook_options">
 
-				<?php
-                    echo submit_button(
-				        $text = "Delete all options",
-                        $type = 'delete button-primary',
-                        null,
-                        $wrap = true,
-                        array( 'style' => 'background: #d63638;border: #d63638;' )
-                    );
-				?>
+			<?php
+			echo submit_button(
+				$text = "Delete all options",
+				$type = 'delete button-primary',
+				null,
+				$wrap = true,
+				array( 'style' => 'background: #d63638;border: #d63638;' )
+			);
+			?>
 
-            </form>
+        </form>
 
-		<?php endif; ?>
+        <div class="postbox">
+            <div class="inside">
+                <h2>Previously stored Facebook configuration data</h2>
+                <table class="widefat">
+                    <tbody>
+					<?php
+					$i = 0;
+					foreach ( $options
 
-		<?php
-		/**
-		 * Disable if Facebook for WooCommerce is active
-		 */
-		if ( is_plugin_active( 'facebook-for-woocommerce/facebook-for-woocommerce.php' ) ): ?>
+					as $option ): ?>
+                    <tr <?php echo ( $i % 2 == 0 ) ? 'class="alternate"' : ''; ?> >
+                        <td class="row-title">
 
-            <h3>Please deactivate WooCommerce for Facebook if you want to delete options.</h3>
-	
-	    <?php
-		$facebook_config = get_option(facebook_config);
-		if( is_array( $facebook_config )):
- 	     ?>
-	    <pre>
-		Previously stored Facebook Config data
-		<?php print_r( $facebook_config ); ?>
-	    </pre>
-            <?php endif; ?>
+                    <?php echo esc_textarea( $option ); ?>
 
-            <button class="button button-disabled">
-                Delete all options
-            </button>
+                        </td>
+                        <td>
 
-		<?php endif; ?>
+                    <?php
+                    $option_value = get_option( $option, '' );
+                    echo esc_textarea( $option_value ); ?>
+
+                        </td>
+						<?php $i ++;
+						endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
 
 	<?php endif; ?>
-
 	<?php if ( 'connection-test' === $active_tab ) : ?>
 
 		<?php
@@ -124,8 +97,8 @@ if ( isset( $_POST['reset'] ) && $_POST['reset'] === 'true' && check_admin_refer
 
             <form method="post" action="options.php">
 
-	            <?php settings_fields( 'facebook_connection_test' ); ?>
-	            <?php do_settings_sections( 'troubleshoot-facebook-connection-test' ); ?>
+				<?php settings_fields( 'facebook_connection_test' ); ?>
+				<?php do_settings_sections( 'troubleshoot-facebook-connection-test' ); ?>
 				<?php echo submit_button( 'Save proxy settings' ); ?>
 
             </form>
