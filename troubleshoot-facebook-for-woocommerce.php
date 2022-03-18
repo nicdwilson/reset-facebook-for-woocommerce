@@ -17,9 +17,11 @@ if ( ! defined( 'WPINC' ) ) {
 
 if ( is_admin() ) {
 	require_once plugin_dir_path( __FILE__ ) . '/admin/class-menu.php';
-	require_once plugin_dir_path( __FILE__ ) . '/admin/class-admin-actions.php';
+	require_once plugin_dir_path( __FILE__ ) . '/admin/class-delete-options.php';
+	require_once plugin_dir_path( __FILE__ ) . '/admin/class-product-data-actions.php';
 }
 
+require_once plugin_dir_path( __FILE__ ) . '/tests/test-data.php';
 
 
 /**

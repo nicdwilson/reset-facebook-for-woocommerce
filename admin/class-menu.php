@@ -80,8 +80,8 @@ class Menu {
 	 */
 	public function render_page() {
 
-		$actions = new Admin_Actions();
-		$options = $actions->options_data;
+		$delete_action = new Delete_Options();
+		$options = $delete_action->options_data;
 
 		ob_start();
         /**
