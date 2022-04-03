@@ -25,7 +25,7 @@ if ( is_admin() ) {
 	require_once plugin_dir_path( __FILE__ ) . '/admin/class-connection-test.php';
 }
 
-require_once plugin_dir_path( __FILE__ ) . '/tests/test-data.php';
+//require_once plugin_dir_path( __FILE__ ) . '/tests/test-data.php';
 
 
 /**
