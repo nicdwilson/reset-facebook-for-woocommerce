@@ -1,6 +1,6 @@
 <?php
 
-namespace TSFB4WC;
+namespace TFB4WC;
 
 // If this file is called directly, abort.
 if ( ! defined( 'WPINC' ) ) {
@@ -23,68 +23,228 @@ class Product_Data_Actions {
 	/* when the class is constructed. */
 	public function __construct() {
 
-		add_action( 'admin_ajax_delete_product_data', array( $this, 'delete_product_data' ) );
-		add_action( 'admin_ajax_reset_product_data', array( $this, 'reset_product_data' ) );
+		add_action( 'admin_post_delete_facebook_product_data', array( $this, 'delete_product_data' ) );
+		add_action( 'admin_post_reset_facebook_product_data', array( $this, 'reset_product_data' ) );
+		add_action( 'admin_post_delete_orphaned_facebook_data', array( $this, 'delete_orphaned_data' ) );
 	}
 
+	/**
+	 * Delete orphaned products from catalogue using a manually supplied Facebook retailer ID.
+	 *
+	 * @return void
+	 */
+	public function delete_orphaned_data() {
+
+		$wpnonce = $_REQUEST['_wpnonce'];
+		$this->do_security_checks( $wpnonce );
+
+		$retailer_id = ( isset_( $_REQUEST['content_id'] ) ) ? array( sanitize_text_field( $_REQUEST['content_id'] ) ) : array();
+
+		/**
+		 * todo handle returned empty content_id
+		 */
+		if ( empty( $retailer_id ) ) {
+			header( 'Location:' . $_SERVER["HTTP_REFERER"] . '&missing_content_id=1' );
+			exit();
+		}
+
+		facebook_for_woocommerce()->get_products_sync_handler()->delete_products( $retailer_id );
+
+		header( 'Location:' . $_SERVER["HTTP_REFERER"] );
+		exit();
+	}
+
+	/**
+	 * todo reset product meta on Facebook
+	 *
+	 * @return void
+	 */
 	public function reset_product_data() {
 
+		$wpnonce = $_REQUEST['_wpnonce'];
+		$this->do_security_checks( $wpnonce );
+
 	}
 
+	/**
+	 * Deletes all product data from Facebook (we hope)
+	 *
+	 * @return void
+	 */
 	public function delete_product_data() {
 
-		if ( ! function_exists( 'facebook_for_woocommerce' ) ) {
-			return;
+		$wpnonce = $_REQUEST['_wpnonce'];
+		$this->do_security_checks( $wpnonce );
+
+		echo '<pre>';
+		echo 'Deleting product data...<br>';
+		/**
+		 * A lock is set to prevent two jobs running simultaneously. This is renewed while the loop runs.
+		 * Currently set to 60 seconds
+		 * todo reset to 300
+		 */
+		$is_running = get_transient( 'tfb4wc_joblock' );
+
+		if ( $is_running === '1' ) {
+			die( 'A Facebook products troubleshooting job is running and has not completed or may have stalled. Please wait a few minutes and try again.<br>' . $this->get_backlink() );
+		} else {
+			echo 'Setting lock.<br>';
+			set_transient( 'tfb4wc_joblock', 1, 60 );
 		}
 
-		if ( get_option( 'tsfb4wc_facebook_delete_all_products', false ) || ! is_admin() ) {
-			return;
-		}
+		$offset         = (int) get_option( 'tfb4wc_delete_offset', 0 );
+		$posts_per_page = ( isset( $_POST['delete_posts_per_page'] ) ) ? (int) $_POST['delete_posts_per_page'] : 10;
+		$product_cat    = ( isset( $_POST['delete_product_cat'] ) ) ? (int) $_POST['delete_product_cat'] : 0;
+		$arguments      = $this->build_query_arguments( $posts_per_page, $product_cat );
 
-		$offset         = (int) get_option( 'tsfb4wc_delete_product_data_offset', 0 );
-		$posts_per_page = 500;
+		echo 'Found ' . $this->count_products() . ' products on site<br>';
 
 		do {
-			$products = get_posts( array(
-				'post_type'      => 'product',
-				'post_status'    => 'any',
-				'fields'         => 'ids',
-				'offset'         => $offset,
-				'posts_per_page' => $posts_per_page,
-				// uncomment and update the lines below to select specific taxonomy terms to update
-				// 'tax_query'      => array(
-				// 	array(
-				// 		'taxonomy' => 'product_cat',
-				// 		'field'    => 'term_id',
-				// 		'terms'    => array_merge( array( 849, 850, 851 ) ),
-				// 	),
-				// ),
-			) );
 
-			if ( ! empty( $products ) ) {
+			$arguments['offset'] = $offset;
+			$product_ids         = get_posts( $arguments );
+			$retailer_ids        = array();
 
-				foreach ( $products as $product_id ) {
+			if ( ! empty( $product_ids ) ) {
+
+				foreach ( $product_ids as $product_id ) {
 
 					$product = wc_get_product( $product_id );
 
 					if ( $product ) {
-						$retailer_ids[] = \WC_Facebookcommerce_Utils::get_fb_retailer_id( $product );
+						$retailer_id = \WC_Facebookcommerce_Utils::get_fb_retailer_id( $product );
+						echo 'Adding: ID: ' . $product_id . ' | SKU: ' . $product->get_sku() . ' | Facebook ID: ' . $retailer_id . '<br>';
+						$retailer_ids[] = $retailer_id;
 					}
 
-					facebook_for_woocommerce()->get_products_sync_handler()->delete_products( $retailer_ids );
+					// todo we have no feedback loop so cannot delete this, but what is the effect? Probably horrible.
+					//delete_post_meta( $product_id, self::FB_PRODUCT_ITEM_ID );
+					//delete_post_meta( $product_id, self::FB_PRODUCT_GROUP_ID );
 				}
 			}
 
-			// increment offset
+			/**
+			 * Enqueue background deletion
+			 */
+			echo 'Delete batch contains ' . count( $retailer_ids ) . ' products.<br>';
+			facebook_for_woocommerce()->get_products_sync_handler()->delete_products( $retailer_ids );
+
+			/**
+			 * Increment the offset
+			 */
 			$offset += $posts_per_page;
 
-			// and keep track of how far we made it in case we hit a script timeout
-			update_option( 'tsfb4wc_delete_product_data_offset', $offset );
+			/**
+			 * Keep the job lock current
+			 */
+			echo 'Resetting lock.<br>';
+			set_transient( 'tfb4wc_joblock', 1, 60 );
 
-		} while ( count( $products ) == $posts_per_page );
+			/**
+			 * Keep track of how far we made it in case we hit a script timeout
+			 */
+			echo 'Resetting offset<br>';
+			update_option( 'tfb4wc_delete_offset', $offset );
 
-		if ( count( $products ) !== $posts_per_page ) {
-			update_option( 'tsfb4wc_facebook_delete_all_products', 1 );
+		} while ( count( $product_ids ) == $posts_per_page );
+
+		/**
+		 * Clean up job lock and reset the offset
+		 */
+		echo 'Removing lock.<br>';
+		delete_transient( 'tfb4wc_joblock' );
+		echo 'Deleting offset.<br>';
+		delete_option( 'tfb4wc_delete_offset' );
+
+		/**
+		 * Provide a back link
+		 */
+		echo $this->get_backlink();
+
+	}
+
+	/**
+	 * Returns an HTML link to the http_referrer
+	 *
+	 * @return string
+	 */
+	private function get_backlink() {
+		return '<a href="' . $_SERVER["HTTP_REFERER"] . '">Go back</a>';
+	}
+
+	/**
+	 * Builds the query arguments for the product selection
+	 *
+	 * @param $posts_per_page
+	 * @param $product_cat
+	 *
+	 * @return array
+	 */
+	private function build_query_arguments( $posts_per_page = 10, $product_cat = 0 ) {
+
+		$arguments['post_type']      = 'product';
+		$arguments['post_status']    = 'any';
+		$arguments['fields']         = 'ids';
+		$arguments['posts_per_page'] = $posts_per_page;
+
+		if ( ! empty( $product_cat ) ) {
+
+			$tax_query['tax_query'] = 'product_cat';
+			$tax_query['field']     = 'product_cat';
+			$tax_query['terms']     = array_merge( array( $product_cat ) );
+
+			$arguments['tax_query'] = $tax_query;
+		}
+
+		return $arguments;
+	}
+
+	/**
+	 * Returns the total number of products on the site, in case we need
+	 * a handbrake later
+	 *
+	 * @return int
+	 */
+	private function count_products() {
+
+		$args = array(
+			'post_type'      => 'product',
+			'fields'         => 'ids',
+			'posts_per_page' => 1
+		);
+
+		$products = new \WP_Query( $args );
+
+		return $products->found_posts;
+	}
+
+	/**
+	 * Do nonce checks, because DRY.
+	 *
+	 * @return void
+	 */
+	function do_security_checks( $wpnonce ) {
+
+		/*
+		 * Check user caps
+		 */
+		if ( ! current_user_can( 'manage_options' ) ) {
+			header( 'Location:' . $_SERVER["HTTP_REFERER"] . '?error=unauthenticated' );
+			exit();
+		}
+
+		/*
+		 * Check nonce
+		 */
+		if ( ! wp_verify_nonce( $wpnonce, 'product_data_job' ) ) {
+			die( 'Cheatin\' huh?' );
+		}
+
+		/*
+		 * We need Facebook for WooCommerce to be active to do any of this
+		 */
+		if ( ! function_exists( 'facebook_for_woocommerce' ) ) {
+			die( 'Facebook for WooCommerce needs to be active for this to run. Please go back and activate the extension.<br>' . $this->get_backlink() );
 		}
 	}
 

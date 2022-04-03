@@ -87,7 +87,7 @@ class Delete_Options {
 			exit();
 		}
 
-		if ( isset( $_REQUEST['_wpnonce'] ) && wp_verify_nonce( $_REQUEST['_wpnonce'], 'deletefacebook_' . get_current_user_id() ) ) {
+		if ( isset( $_REQUEST['_wpnonce'] ) && wp_verify_nonce( $_REQUEST['_wpnonce'], 'delete_facebook_options' ) ) {
 
 			$options_inDB = $this->scan_options_table();
 
@@ -142,4 +142,3 @@ class Delete_Options {
 
 }
 
-add_action( 'admin_init', array( 'TFB4WC\Delete_Options', 'init' ) );

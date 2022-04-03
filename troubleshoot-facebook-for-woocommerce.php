@@ -19,6 +19,10 @@ if ( is_admin() ) {
 	require_once plugin_dir_path( __FILE__ ) . '/admin/class-menu.php';
 	require_once plugin_dir_path( __FILE__ ) . '/admin/class-delete-options.php';
 	require_once plugin_dir_path( __FILE__ ) . '/admin/class-product-data-actions.php';
+	require_once plugin_dir_path( __FILE__ ) . '/admin/class-clear-facebook-logs.php';
+	require_once plugin_dir_path( __FILE__ ) . '/admin/class-test-products.php';
+	require_once plugin_dir_path( __FILE__ ) . '/admin/class-validate-product.php';
+	require_once plugin_dir_path( __FILE__ ) . '/admin/class-connection-test.php';
 }
 
 require_once plugin_dir_path( __FILE__ ) . '/tests/test-data.php';
@@ -52,8 +56,13 @@ class Troubleshoot_FB4WC {
 	public function __construct() {
 
 		add_action( 'admin_menu', array( 'TFB4WC\Menu', 'init' ) );
+		add_action( 'admin_init', array( 'TFB4WC\Product_Data_Actions', 'init' ) );
+		add_action( 'admin_init', array( 'TFB4WC\Clear_Facebook_Logs', 'init' ) );
 		add_action( 'admin_notices', array( $this, 'check_plugins' ) );
-
+		add_action( 'admin_init', array( 'TFB4WC\Delete_Options', 'init' ) );
+		add_action( 'admin_init', array( 'TFB4WC\Connection_Test', 'init' ) );
+		add_action( 'admin_init', array( 'TFB4WC\Test_Products', 'init' ) );
+		add_action( 'admin_init', array( 'TFB4WC\Remove_Orphans', 'init' ) );
 
 		if ( get_option( 'tsfb4wc_connection_test' ) === '1' ) {
 
@@ -74,15 +83,7 @@ class Troubleshoot_FB4WC {
                 for WooCommerce plugin when you are finished</p>
         </div>
 
-		<?php if ( is_plugin_active( 'facebook-for-woocommerce/facebook-for-woocommerce.php' ) ): ?>
-
-            <div class="notice notice-error error-alt">
-                <p>Facebook for WooCommerce is active.</p>
-            </div>
-
-		<?php endif;
-
-		if ( get_option( 'tsfb4wc_connection_test' ) === '1' ): ?>
+		<?php if ( get_option( 'tsfb4wc_connection_test' ) === '1' ): ?>
 
             <div class="notice notice-error error-alt">
                 <p>Facebook for WooCommerce is connecting through a test proxy. Remember to deactivate this when you
