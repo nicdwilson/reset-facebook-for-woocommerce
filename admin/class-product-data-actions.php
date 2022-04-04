@@ -38,7 +38,7 @@ class Product_Data_Actions {
 		$wpnonce = $_REQUEST['_wpnonce'];
 		$this->do_security_checks( $wpnonce );
 
-		$retailer_id = ( isset_( $_REQUEST['content_id'] ) ) ? array( sanitize_text_field( $_REQUEST['content_id'] ) ) : array();
+		$retailer_id = ( isset( $_REQUEST['content_id'] ) ) ? array( sanitize_text_field( $_REQUEST['content_id'] ) ) : array();
 
 		/**
 		 * todo handle returned empty content_id

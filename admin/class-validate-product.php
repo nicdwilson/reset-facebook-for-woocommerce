@@ -8,14 +8,14 @@ if ( ! defined( 'WPINC' ) ) {
 }
 
 if ( ! class_exists( '\SkyVerge\WooCommerce\Facebook\ProductSync\ProductValidator' ) ) {
-	include_once( ABSPATH . '/wp-content/plugins/facebook-for-woocommerce/includes/fbutils.php' );
-	include_once( ABSPATH . '/wp-content/plugins/facebook-for-woocommerce/includes/ProductSync/ProductValidator.php' );
+	include_once( WP_CONTENT_DIR . '/plugins/facebook-for-woocommerce/includes/fbutils.php' );
+	include_once( WP_CONTENT_DIR . '/plugins/facebook-for-woocommerce/includes/ProductSync/ProductValidator.php' );
 }
 
 
 use \SkyVerge\WooCommerce\Facebook\ProductSync;
-use SkyVerge\WooCommerce\Facebook\ProductSync\ProductExcludedException;
-use SkyVerge\WooCommerce\Facebook\ProductSync\ProductInvalidException;
+use \SkyVerge\WooCommerce\Facebook\ProductSync\ProductExcludedException;
+use \SkyVerge\WooCommerce\Facebook\ProductSync\ProductInvalidException;
 use \SkyVerge\WooCommerce\Facebook\ProductSync\ProductValidator;
 
 class  Validate_Product extends \SkyVerge\WooCommerce\Facebook\ProductSync\ProductValidator {
