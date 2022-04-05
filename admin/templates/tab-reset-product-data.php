@@ -36,22 +36,21 @@ if ( ! defined( 'WPINC' ) ) {
                 <label for="reset_product_cat">Category:</label>
             </td>
             <td>
-	            <?php
-	            $args = array(
-		            'name'              => 'reset_product_cat',
-		            'value'             => 'term_id',
-		            'taxonomy'          => 'product_cat',
-		            'option_none_value' => 0,
-		            'show_option_none'  => '',
-		            'show_option_all'   => 'All'
-	            );
-	            wp_dropdown_categories( $args );
-	            ?>
+				<?php
+				$args = array(
+					'name'              => 'reset_product_cat',
+					'value_field'       => 'slug',
+					'taxonomy'          => 'product_cat',
+					'option_none_value' => 0,
+					'show_option_none'  => '',
+					'show_option_all'   => 'All'
+				);
+				wp_dropdown_categories( $args );
+				?>
             </td>
         </tr>
         </tbody>
     </table>
-
 
 
 	<?php

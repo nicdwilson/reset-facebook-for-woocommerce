@@ -250,7 +250,7 @@ class Product_Data_Actions {
 	 *
 	 * @return array
 	 */
-	private function build_query_arguments( $posts_per_page = 10, $product_cat = 0 ) {
+	private function build_query_arguments( $posts_per_page = 10, $product_cat = '' ) {
 
 		$arguments['post_type']      = 'product';
 		$arguments['post_status']    = 'any';
@@ -259,13 +259,13 @@ class Product_Data_Actions {
 
 		if ( ! empty( $product_cat ) ) {
 
-			$tax_query['tax_query'] = 'product_cat';
-			$tax_query['field']     = 'product_cat';
-			$tax_query['terms']     = array_merge( array( $product_cat ) );
+			$tax_query['taxonomy'] = 'product_cat';
+			$tax_query['field']     = 'slug';
+			$tax_query['terms']     = array( $product_cat );
 
-			$arguments['tax_query'] = $tax_query;
+			$arguments['tax_query'] = array($tax_query );
 		}
-
+		
 		return $arguments;
 	}
 

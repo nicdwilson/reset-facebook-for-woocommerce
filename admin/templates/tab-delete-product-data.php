@@ -49,7 +49,7 @@ if ( ! defined( 'WPINC' ) ) {
 				<?php
 				$args = array(
 					'name'              => 'delete_product_cat',
-					'value'             => 'term_id',
+					'value_field'       => 'slug',
 					'taxonomy'          => 'product_cat',
 					'option_none_value' => 0,
 					'show_option_none'  => '',
