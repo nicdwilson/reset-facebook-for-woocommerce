@@ -71,9 +71,7 @@ if ( ! defined( 'WPINC' ) ) {
 
 		<?php if ( 'reset-product-data' === $active_tab ) : ?>
 
-            <h3>Currently unavailable</h3>
-
-			<?php //include( 'tab-reset-product-data.php' ); ?>
+			<?php include( 'tab-reset-product-data.php' ); ?>
 
 		<?php endif; ?>
 
