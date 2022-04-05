@@ -64,6 +64,76 @@ class Product_Data_Actions {
 		$wpnonce = $_REQUEST['_wpnonce'];
 		$this->do_security_checks( $wpnonce );
 
+		echo '<pre>';
+		echo 'Deleting product data...<br>';
+		/**
+		 * A lock is set to prevent two jobs running simultaneously. This is renewed while the loop runs.
+		 * Currently set to 60 seconds
+		 * todo reset to 300
+		 */
+		$is_running = get_transient( 'tfb4wc_joblock' );
+
+		if ( $is_running === '1' ) {
+			die( 'A Facebook products troubleshooting job is running and has not completed or may have stalled. Please wait a few minutes and try again.<br>' . $this->get_backlink() );
+		} else {
+			echo 'Setting lock.<br>';
+			set_transient( 'tfb4wc_joblock', 1, 60 );
+		}
+
+		$offset         = (int) get_option( 'tfb4wc_reset_offset', 0 );
+		$posts_per_page = ( isset( $_POST['posts_per_page'] ) ) ? sanitize_text_field( $_POST['posts_per_page'] ) : '10';
+		$product_cat    = ( isset( $_POST['reset_product_cat'] ) ) ? sanitize_text_field( $_POST['reset_product_cat'] ) : '0';
+		$arguments      = $this->build_query_arguments( $posts_per_page, $product_cat );
+
+		echo 'Found ' . $this->count_products() . ' products on site<br>';
+
+		do {
+
+			$arguments['offset'] = $offset;
+			$product_ids         = get_posts( $arguments );
+
+			if ( ! empty( $product_ids ) ) {
+
+				$integration = facebook_for_woocommerce()->get_integration();
+
+				foreach ( $product_ids as $product_id ) {
+					echo 'Resetting product ID: ' . $product_id . '<br>';
+					$integration->reset_single_product( $product_id );
+				}
+			}
+
+			/**
+			 * Increment the offset
+			 */
+			$offset += $posts_per_page;
+
+			/**
+			 * Keep the job lock current
+			 */
+			echo 'Resetting lock.<br>';
+			set_transient( 'tfb4wc_joblock', 1, 60 );
+
+			/**
+			 * Keep track of how far we made it in case we hit a script timeout
+			 */
+			echo 'Resetting offset<br>';
+			update_option( 'tfb4wc_reset_offset', $offset );
+
+		} while ( count( $product_ids ) == $posts_per_page );
+
+		/**
+		 * Clean up job lock and reset the offset
+		 */
+		echo 'Removing lock.<br>';
+		delete_transient( 'tfb4wc_joblock' );
+		echo 'Deleting offset.<br>';
+		delete_option( 'tfb4wc_reset_offset' );
+
+		/**
+		 * Provide a back link
+		 */
+		echo $this->get_backlink();
+
 	}
 
 	/**
@@ -93,8 +163,8 @@ class Product_Data_Actions {
 		}
 
 		$offset         = (int) get_option( 'tfb4wc_delete_offset', 0 );
-		$posts_per_page = ( isset( $_POST['delete_posts_per_page'] ) ) ? (int) $_POST['delete_posts_per_page'] : 10;
-		$product_cat    = ( isset( $_POST['delete_product_cat'] ) ) ? (int) $_POST['delete_product_cat'] : 0;
+		$posts_per_page = ( isset( $_POST['posts_per_page'] ) ) ? sanitize_text_field( $_POST['posts_per_page'] ) : 10;
+		$product_cat    = ( isset( $_POST['delete_product_cat'] ) ) ? sanitize_text_field( $_POST['delete_product_cat'] ) : 0;
 		$arguments      = $this->build_query_arguments( $posts_per_page, $product_cat );
 
 		echo 'Found ' . $this->count_products() . ' products on site<br>';
